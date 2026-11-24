@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Sổ Cân Mít - Thu Mua Mít Thái &amp; Mít Ruột Đỏ</title>
+  <!-- Tải Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tải font Be Vietnam Pro hỗ trợ dấu tiếng Việt siêu nét ngoài trời -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Be Vietnam Pro"', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            jackfruit: {
+              leaf: '#14532d',
+              deep: '#166534',
+              fresh: '#22c55e',
+              gold: '#eab308',
+              ripe: '#facc15',
+              cream: '#f6f8f5',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Tối ưu cảm ứng chạm trên điện thoại ngoài vườn */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+      background-color: #f6f8f5;
+      color: #111827;
+      overscroll-behavior-y: contain;
+    }
+
+    /* Hiệu ứng nhấn phím cơ học rõ ràng */
+    .keypad-btn {
+      transition: transform 0.06s ease, box-shadow 0.06s ease, background-color 0.1s ease;
+      user-select: none;
+    }
+    .keypad-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Hiệu ứng nhấp nháy xác nhận vừa cân xong 1 trái */
+    @keyframes flashSuccess {
+      0% { transform: scale(0.97); box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.45); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+    .animate-flash {
+      animation: flashSuccess 0.35s ease-out;
+    }
+
+    /* Thanh cuộn gọn gàng */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+
+    /* Ẩn thanh cuộn ngang cho dải giá nhanh và bộ lọc 12 loại trên di động */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Cấu hình chuyên dụng khi bấm In Phiếu Cân (@media print) */
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #receipt-printable, #receipt-printable * {
+        visibility: visible !important;
+      }
+      #receipt-printable {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 12px !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-24 md:pb-8">
+
+  <!-- ==================== THANH TIÊU ĐỀ CỐ ĐỊNH TRÊN CÙNG ==================== -->
+  <header class="sticky top-0 z-30 bg-gradient-to-r from-green-900 via-green-800 to-emerald-800 text-white shadow-lg">
+    <div class="max-w-6xl mx-auto px-3 sm:px-5 py-2.5 flex items-center justify-between gap-2">
+      <!-- Logo & Tên Ứng Dụng -->
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-yellow-400 text-green-950 flex items-center justify-center shadow-inner shrink-0 font-black text-xl border-2 border-yellow-200">
+          🍈
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight truncate text-yellow-300">
+              SỔ CÂN MÍT
+            </h1>
+            <a
+              href="https://linhkienpinthapmuoi.io.vn"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Truy cập Linh Kiện Pin Tháp Mười"
+              class="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold bg-green-950/75 hover:bg-green-950 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-400/40 truncate transition"
+            >
+              <span>⚡ Phát triển bởi Linh Kiện Pin Tháp Mười</span>
+            </a>
+          </div>
+          <p id="header-live-stats" class="text-xs text-green-100 font-medium truncate">
+            Đang cân: 0 trái • 0,0 kg
+          </p>
+        </div>
+      </div>
+
+      <!-- Các nút điều khiển nhanh trên Header -->
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <!-- Nút Thông tin tác giả -->
+        <button
+          type="button"
+          onclick="openAuthorModal()"
+          title="Thông tin tác giả - Linh Kiện Pin Tháp Mười"
+          class="p-2.5 rounded-xl bg-green-950/50 hover:bg-green-950/80 border border-green-600/40 text-emerald-200 flex items-center gap-1.5 text-xs font-bold transition"
+        >
+          <span class="text-base leading-none">ℹ️</span>
+          <span class="hidden md:inline">Tác giả</span>
+        </button>
+
+        <!-- Nút Bật/Tắt Âm Thanh Bíp -->
+        <button
+          id="btn-toggle-sound"
+          type="button"
+          onclick="toggleSound()"
+          title="Bật / Tắt tiếng bíp khi cân"
+          class="p-2.5 rounded-xl bg-green-950/50 hover:bg-green-950/80 border border-green-600/40 text-yellow-300 flex items-center gap-1.5 text-xs font-bold transition"
+        >
+          <span id="sound-icon" class="text-base leading-none">🔊</span>
+          <span id="sound-label" class="hidden sm:inline">Âm: Bật</span>
+        </button>
+
+        <!-- Nút Lưu & Tạo Phiếu Mới -->
+        <button
+          type="button"
+          onclick="openNewTicketConfirm()"
+          class="px-3 py-2.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-green-950 font-extrabold text-xs sm:text-sm shadow flex items-center gap-1.5 transition active:scale-95"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Phiếu Mới</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Thanh Điều Hướng 4 Tab Chính -->
+    <nav class="bg-green-950/60 border-t border-green-700/50">
+      <div class="max-w-6xl mx-auto px-2 sm:px-5 grid grid-cols-4 gap-1 py-1.5">
+        <button
+          type="button"
+          data-tab="weigh"
+          onclick="switchTab('weigh')"
+          class="tab-btn py-2 px-1.5 rounded-xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1 transition bg-yellow-400 text-green-950 shadow-sm"
+        >
+          <span>⚖️</span>
+          <span>Bàn Cân</span>
+        </button>
+        <button
+          type="button"
+          data-tab="prices"
+          onclick="switchTab('prices')"
+          class="tab-btn py-2 px-1.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1 transition text-green-100 hover:bg-green-800/60"
+        >
+          <span>🏷️</span>
+          <span>Giá &amp; Bì</span>
+        </button>
+        <button
+          type="button"
+          data-tab="ticket"
+          onclick="switchTab('ticket')"
+          class="tab-btn py-2 px-1.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1 transition text-green-100 hover:bg-green-800/60"
+        >
+          <span>🧾</span>
+          <span>Phiếu Tiền</span>
+        </button>
+        <button
+          type="button"
+          data-tab="history"
+          onclick="switchTab('history')"
+          class="tab-btn py-2 px-1.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1 transition text-green-100 hover:bg-green-800/60"
+        >
+          <span>📒</span>
+          <span>Lịch Sử (<span id="history-count-badge">0</span>)</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ==================== NỘI DUNG CHÍNH ==================== -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-5 pt-3 sm:pt-4">
+
+    <!-- ==================== TAB 1: BÀN CÂN NHANH ==================== -->
+    <section id="tab-weigh" class="space-y-3.5 sm:space-y-4">
+
+      <!-- Dải hiển thị nhanh Bảng Giá 16 loại + Trừ bì (bấm để mở tab Giá & Bì) -->
+      <div class="bg-white rounded-2xl p-2 shadow-sm border border-green-200 flex items-center justify-between gap-2">
+        <div id="quick-price-strip" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+          <!-- Render động qua JS -->
+        </div>
+        <button
+          type="button"
+          onclick="switchTab('prices')"
+          class="px-2.5 py-1.5 rounded-xl bg-green-100 hover:bg-green-200 text-green-900 font-extrabold text-xs flex items-center gap-1 shrink-0 transition"
+        >
+          <span>⚙️ Giá / Bì</span>
+        </button>
+      </div>
+
+      <!-- BỐ CỤC 2 CỘT TRÊN TABLET/DESKTOP, XẾP DỌC GỌN GÀNG TRÊN DI ĐỘNG -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+        <!-- CỘT TRÁI (6/12): BÀN PHÍM CÂN NHANH & LƯỚI 16 NÚT PHÂN LOẠI (4x4) -->
+        <div class="lg:col-span-6 space-y-3">
+          <div id="weigh-pad-card" class="bg-white rounded-3xl p-3 sm:p-4 shadow-md border-2 border-green-700/20">
+
+            <!-- Màn hình hiển thị số ký lớn + Trừ bì + Hoàn tác nhanh -->
+            <div class="bg-slate-900 text-white rounded-2xl p-3 mb-2.5 shadow-inner border border-slate-700 relative overflow-hidden">
+              <div class="flex items-center justify-between gap-2 text-xs text-slate-400 font-semibold mb-1">
+                <span class="flex items-center gap-1.5 truncate">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                  <span class="truncate">NHẬP SỐ KÝ TRÁI MÍT</span>
+                </span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span id="tare-indicator-badge" class="px-2 py-0.5 rounded-md bg-slate-800 text-amber-300 font-bold">
+                    Trừ bì: Tắt
+                  </span>
+                  <button
+                    id="btn-undo-top"
+                    type="button"
+                    onclick="undoLastItem()"
+                    disabled
+                    title="Hoàn tác trái vừa cân"
+                    class="px-2 py-0.5 rounded-md bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[11px] flex items-center gap-1 transition active:scale-95 disabled:opacity-35 disabled:pointer-events-none"
+                  >
+                    <span>↩️ Hoàn tác</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Số kg đang nhập -->
+              <div class="flex items-baseline justify-end gap-2 my-0.5">
+                <span
+                  id="weight-display"
+                  class="text-5xl sm:text-6xl font-black tracking-tight text-yellow-300 tabular-nums leading-none"
+                >0</span>
+                <span class="text-xl sm:text-2xl font-extrabold text-slate-300">kg</span>
+              </div>
+
+              <!-- Dòng hiển thị Thực tính sau trừ bì & Trái vừa chốt -->
+              <div class="mt-2 pt-1.5 border-t border-slate-800 flex items-center justify-between gap-2 text-xs">
+                <div id="net-weight-preview" class="text-emerald-300 font-bold truncate">
+                  Thực tính: 0,0 kg
+                </div>
+                <div id="last-weighed-badge" class="text-slate-400 truncate text-right">
+                  Chưa có trái nào
+                </div>
+              </div>
+            </div>
+
+            <!-- BÀN PHÍM SỐ CẢM ỨNG TO RÕ (0-9, ., ⌫, C) -->
+            <div class="grid grid-cols-3 gap-1.5 mb-2.5">
+              <button type="button" onclick="pressDigit('7')" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-900 font-black text-2xl sm:text-3xl shadow-sm border border-slate-300">7</button>
+              <button type="button" onclick="pressDigit('8')" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-900 font-black text-2xl sm:text-3xl shadow-sm border border-slate-300">8</button>
+              <button type="button" onclick="pressDigit('9')" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-900 font-black text-2xl sm:text-3xl shadow-sm border border-slate-300">9</button>
+
+              <button type="button" onclick="pressDigit('4')" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-900 font-black text-2xl sm:text-3xl shadow-sm border border-slate-300">4</button>
+              <button type="button" onclick="pressDigit('5')" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-900 font-black text-2xl sm:text-3xl shadow-sm border border-slate-300">5</button>
+              <button type="button" onclick="pressDigit('6')" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-900 font-black text-2xl sm:text-3xl shadow-sm border border-slate-300">6</button>
+
+              <button type="button" onclick="pressDigit('1')" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-900 font-black text-2xl sm:text-3xl shadow-sm border border-slate-300">1</button>
+              <button type="button" onclick="pressDigit('2')" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-900 font-black text-2xl sm:text-3xl shadow-sm border border-slate-300">2</button>
+              <button type="button" onclick="pressDigit('3')" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-900 font-black text-2xl sm:text-3xl shadow-sm border border-slate-300">3</button>
+
+              <button type="button" onclick="pressDecimal()" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-amber-100 hover:bg-amber-200 active:bg-amber-300 text-amber-950 font-black text-3xl shadow-sm border border-amber-300">.</button>
+              <button type="button" onclick="pressDigit('0')" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-900 font-black text-2xl sm:text-3xl shadow-sm border border-slate-300">0</button>
+              <div class="grid grid-cols-2 gap-1.5">
+                <button type="button" onclick="pressBackspace()" aria-label="Xóa 1 số" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-rose-100 hover:bg-rose-200 active:bg-rose-300 text-rose-800 font-black text-xl shadow-sm border border-rose-300 flex items-center justify-center">⌫</button>
+                <button type="button" onclick="pressClear()" aria-label="Xóa hết" class="keypad-btn h-11 sm:h-13 rounded-2xl bg-slate-700 hover:bg-slate-800 active:bg-slate-900 text-white font-black text-xl shadow-sm border border-slate-600 flex items-center justify-center">C</button>
+              </div>
+            </div>
+
+            <!-- LƯỚI 16 NÚT PHÂN LOẠI (4 CỘT x 4 HÀNG) NGAY DƯỚI BÀN PHÍM SỐ -->
+            <div class="mb-2.5">
+              <div class="flex items-center justify-between mb-1.5 px-0.5">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-700">
+                  Chạm phân loại để chốt trái ngay:
+                </span>
+                <span id="grade-count-caption" class="text-[11px] font-bold text-green-800">
+                  16 phân loại
+                </span>
+              </div>
+              <div id="grade-action-buttons" class="grid grid-cols-4 gap-1.5">
+                <!-- 16 nút phân loại render bằng JS theo lưới 4x4 -->
+              </div>
+            </div>
+
+            <!-- NÚT HOÀN TÁC (XÓA TRÁI VỪA CÂN) NỔI BẬT -->
+            <button
+              id="btn-undo-last"
+              type="button"
+              onclick="undoLastItem()"
+              disabled
+              class="w-full py-2.5 px-3 rounded-2xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition border-2 bg-rose-50 border-rose-300 text-rose-800 hover:bg-rose-100 active:scale-[0.99] disabled:opacity-45 disabled:pointer-events-none"
+            >
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+              </svg>
+              <span id="undo-btn-text">Hoàn tác (Chưa có trái vừa cân)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- CỘT PHẢI (6/12): THẺ TÓM TẮT NHANH & DANH SÁCH TỪNG TRÁI ĐÃ CÂN -->
+        <div class="lg:col-span-6 space-y-3.5">
+
+          <!-- 1. THẺ TÓM TẮT NHANH NGAY BÊN DƯỚI BÀN CÂN -->
+          <div class="bg-white rounded-3xl p-3.5 sm:p-4 shadow-sm border border-green-200 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-sm sm:text-base font-extrabold text-green-950 flex items-center gap-1.5">
+                <span class="w-6 h-6 rounded-lg bg-yellow-100 text-yellow-800 flex items-center justify-center text-xs">📊</span>
+                <span>Tóm Tắt Phiên Cân Hiện Tại</span>
+              </h2>
+              <button
+                type="button"
+                onclick="switchTab('ticket')"
+                class="px-3 py-1.5 rounded-xl bg-green-700 hover:bg-green-800 text-white font-extrabold text-xs shadow-xs flex items-center gap-1 transition active:scale-95"
+              >
+                <span>🧾 Phiếu &amp; Thanh Toán →</span>
+              </button>
+            </div>
+
+            <!-- 3 chỉ số tổng hợp nhanh -->
+            <div class="grid grid-cols-3 gap-2">
+              <div class="bg-slate-50 rounded-2xl p-2.5 border border-slate-200">
+                <div class="text-[11px] font-bold text-slate-500">Tổng số trái</div>
+                <div id="quick-total-fruits" class="text-lg sm:text-xl font-black text-slate-900 tabular-nums mt-0.5">0 trái</div>
+              </div>
+              <div class="bg-green-50 rounded-2xl p-2.5 border border-green-200">
+                <div class="text-[11px] font-bold text-green-800">Tổng kg thực</div>
+                <div id="quick-total-weight" class="text-lg sm:text-xl font-black text-green-900 tabular-nums mt-0.5">0,0 kg</div>
+              </div>
+              <div class="bg-amber-50 rounded-2xl p-2.5 border border-amber-200">
+                <div class="text-[11px] font-bold text-amber-800">Tổng thành tiền</div>
+                <div id="quick-gross-money" class="text-base sm:text-xl font-black text-amber-900 tabular-nums mt-0.5 truncate">0 đ</div>
+              </div>
+            </div>
+
+            <!-- Thẻ thống kê nhỏ chỉ hiện những phân loại đang có phát sinh (> 0 trái) -->
+            <div id="active-grades-badges" class="flex flex-wrap gap-1.5">
+              <!-- Render động qua JS -->
+            </div>
+          </div>
+
+          <!-- 2. DANH SÁCH CHI TIẾT TỪNG TRÁI ĐÃ CÂN (MỚI NHẤT LÊN ĐẦU) -->
+          <div class="bg-white rounded-3xl p-3.5 sm:p-4 shadow-sm border border-green-200">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+              <h2 class="text-sm sm:text-base font-extrabold text-green-950 flex items-center gap-1.5">
+                <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs">📝</span>
+                <span>Chi Tiết Từng Trái (<span id="detail-list-count">0</span>)</span>
+              </h2>
+
+              <!-- Nút xóa toàn bộ danh sách trái -->
+              <button
+                id="btn-clear-all-items"
+                type="button"
+                onclick="handleClearAllItemsClick()"
+                class="hidden px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition"
+              >
+                🗑️ Xóa hết trái
+              </button>
+            </div>
+
+            <!-- Bộ lọc nhanh theo phân loại -->
+            <div id="detail-filter-pills" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-2">
+              <!-- Render động qua JS -->
+            </div>
+
+            <!-- Danh sách trái -->
+            <div id="weighed-items-container" class="space-y-2 max-h-[460px] overflow-y-auto pr-0.5">
+              <!-- Render động qua JS -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: BẢNG GIÁ & TRỪ BÌ ==================== -->
+    <section id="tab-prices" class="hidden max-w-3xl mx-auto space-y-4">
+
+      <!-- Khối Cấu Hình Trừ Bì Sọt / Cuống -->
+      <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-amber-300">
+        <div class="flex items-center justify-between gap-3 bg-amber-50 p-3.5 sm:p-4 rounded-2xl border border-amber-300">
+          <div>
+            <h3 class="text-base sm:text-lg font-extrabold text-amber-950 flex items-center gap-2">
+              <span>🧺 Trừ Bì Sọt / Cuống Tự Động (kg)</span>
+            </h3>
+            <p class="text-xs sm:text-sm text-amber-800 mt-0.5">
+              Bật khi cân mít đựng trong sọt nhựa hoặc trừ cuống. Mỗi lượt chốt trái sẽ tự động trừ số kg bì này.
+            </p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <input
+              id="tare-enabled-toggle"
+              type="checkbox"
+              onchange="toggleTareEnabled(this.checked)"
+              class="sr-only peer"
+            />
+            <div class="w-14 h-8 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-700"></div>
+          </label>
+        </div>
+
+        <div id="tare-weight-controls" class="mt-3 p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 hidden">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <label for="tare-weight-input" class="text-sm font-extrabold text-slate-700">
+              Mức trừ bì mỗi lượt cân (kg):
+            </label>
+            <div class="flex items-center gap-2">
+              <input
+                id="tare-weight-input"
+                type="number"
+                step="0.1"
+                min="0"
+                max="50"
+                value="0.5"
+                oninput="updateTareWeight(this.value)"
+                class="w-28 px-3 py-2 rounded-xl border-2 border-amber-400 bg-white font-black text-lg text-center text-slate-900"
+              />
+              <span class="font-bold text-slate-600">kg</span>
+            </div>
+          </div>
+
+          <!-- Nút chọn nhanh mức bì -->
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-slate-500">Chọn nhanh:</span>
+            <button type="button" onclick="setQuickTare(0.5)" class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-amber-100 font-extrabold text-xs">0,5 kg</button>
+            <button type="button" onclick="setQuickTare(1.0)" class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-amber-100 font-extrabold text-xs">1,0 kg</button>
+            <button type="button" onclick="setQuickTare(1.5)" class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-amber-100 font-extrabold text-xs">1,5 kg</button>
+            <button type="button" onclick="setQuickTare(2.0)" class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-amber-100 font-extrabold text-xs">2,0 kg</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Khối Bảng Giá 16 Phân Loại Mít -->
+      <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-green-200">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-200">
+          <div>
+            <h2 class="text-lg sm:text-xl font-black text-green-950">Bảng Giá 16 Phân Loại Mít</h2>
+            <p class="text-xs sm:text-sm text-slate-600 font-medium">
+              Tự động lưu vào máy. Sửa giá sẽ tự động cập nhật lại tiền toàn bộ trái đang cân.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onclick="addCustomSubCategory()"
+              class="px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-950 font-extrabold text-xs transition"
+            >
+              + Thêm loại phụ
+            </button>
+            <button
+              type="button"
+              onclick="resetDefaultPrices()"
+              class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
+            >
+              ↺ Khôi phục mặc định 16 loại
+            </button>
+          </div>
+        </div>
+
+        <!-- Danh sách 16 phân loại mít (+ loại phụ nếu có) -->
+        <div id="price-settings-list" class="space-y-2.5">
+          <!-- Render động qua JS -->
+        </div>
+
+        <div class="mt-5">
+          <button
+            type="button"
+            onclick="switchTab('weigh')"
+            class="w-full py-3.5 rounded-2xl bg-green-700 hover:bg-green-800 text-white font-extrabold text-base shadow flex items-center justify-center gap-2 transition"
+          >
+            <span>⚖️ Quay Lại Bàn Cân Nhanh</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: PHIẾU CÂN & THANH TOÁN ==================== -->
+    <section id="tab-ticket" class="hidden max-w-4xl mx-auto space-y-4">
+
+      <!-- 1. THÔNG TIN NHÀ VƯỜN / KHÁCH HÀNG -->
+      <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-green-200">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-base sm:text-lg font-extrabold text-green-950 flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-green-100 text-green-800 flex items-center justify-center text-sm">🏡</span>
+            <span>Thông Tin Nhà Vườn &amp; Tiền Cọc</span>
+          </h2>
+          <span id="editing-ticket-indicator" class="hidden text-xs font-bold bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full border border-amber-300">
+            Đang sửa phiếu cũ
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="farmer-name" class="block text-xs font-bold text-slate-600 mb-1">
+              Tên chủ vườn / Khách hàng
+            </label>
+            <input
+              id="farmer-name"
+              type="text"
+              placeholder="VD: Chú Bảy Vườn Mít, Anh Tư..."
+              oninput="updateTicketMeta('farmerName', this.value)"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600/20 outline-none font-bold text-slate-900 text-base"
+            />
+          </div>
+
+          <div>
+            <label for="farmer-phone" class="block text-xs font-bold text-slate-600 mb-1">
+              Số điện thoại (Zalo)
+            </label>
+            <input
+              id="farmer-phone"
+              type="tel"
+              placeholder="VD: 0912 345 678"
+              oninput="updateTicketMeta('farmerPhone', this.value)"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600/20 outline-none font-semibold text-slate-900 text-base"
+            />
+          </div>
+
+          <div>
+            <label for="deposit-amount" class="block text-xs font-bold text-slate-600 mb-1">
+              Tiền cọc / Ứng trước (VNĐ)
+            </label>
+            <div class="relative">
+              <input
+                id="deposit-amount"
+                type="text"
+                inputmode="numeric"
+                placeholder="0"
+                oninput="handleDepositInput(this)"
+                class="w-full pl-3.5 pr-12 py-2.5 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none font-extrabold text-amber-800 text-base tabular-nums"
+              />
+              <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">VNĐ</span>
+            </div>
+          </div>
+
+          <div>
+            <label for="ticket-note" class="block text-xs font-bold text-slate-600 mb-1">
+              Ghi chú cân hàng
+            </label>
+            <input
+              id="ticket-note"
+              type="text"
+              placeholder="VD: Mít Thái siêu sớm, cắt tại vườn..."
+              oninput="updateTicketMeta('note', this.value)"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600/20 outline-none font-medium text-slate-800 text-base"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. BẢNG TỔNG HỢP THEO PHÂN LOẠI CÓ PHÁT SINH & THANH TOÁN -->
+      <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-green-200">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h2 class="text-base sm:text-lg font-extrabold text-green-950 flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-yellow-100 text-yellow-800 flex items-center justify-center text-sm">💰</span>
+            <span>Bảng Tổng Hợp Phiếu Cân</span>
+          </h2>
+          <div class="flex items-center gap-1.5">
+            <button
+              id="btn-toggle-zero-grades"
+              type="button"
+              onclick="toggleShowZeroGrades()"
+              class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
+            >
+              Hiện đủ 16 loại
+            </button>
+            <button
+              type="button"
+              onclick="openReceiptModal()"
+              class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs transition"
+            >
+              👁️ Xem Hóa Đơn
+            </button>
+          </div>
+        </div>
+
+        <!-- Bảng chi tiết từng phân loại: Số trái, Kg gốc, Trừ bì, Kg thực, Đơn giá, Thành tiền -->
+        <div class="overflow-x-auto rounded-2xl border border-slate-200 mb-4">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 text-[11px] sm:text-xs font-extrabold uppercase tracking-wider border-b border-slate-200">
+                <th class="py-2.5 px-2.5">Loại mít</th>
+                <th class="py-2.5 px-1.5 text-center">Trái</th>
+                <th class="py-2.5 px-1.5 text-right">Kg gốc</th>
+                <th class="py-2.5 px-1.5 text-right">Trừ bì</th>
+                <th class="py-2.5 px-1.5 text-right">Kg thực</th>
+                <th class="py-2.5 px-1.5 text-right hidden sm:table-cell">Đơn giá</th>
+                <th class="py-2.5 px-2.5 text-right">Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody id="summary-table-body" class="divide-y divide-slate-100 text-xs sm:text-sm">
+              <!-- Render động qua JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Khối Tổng Cộng & Tiền Thực Trả -->
+        <div class="bg-gradient-to-br from-green-50 via-emerald-50 to-yellow-50 rounded-2xl p-3.5 sm:p-4 border-2 border-green-600/30 space-y-2">
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 pb-2.5 border-b border-green-200">
+            <div class="bg-white/80 rounded-xl p-2.5 border border-green-100">
+              <div class="text-xs font-bold text-slate-500">Tổng số trái</div>
+              <div id="total-fruits-display" class="text-lg sm:text-xl font-black text-slate-900 tabular-nums">0 trái</div>
+            </div>
+            <div class="bg-white/80 rounded-xl p-2.5 border border-green-100">
+              <div class="text-xs font-bold text-slate-500">Tổng Kg gốc</div>
+              <div id="total-gross-weight-display" class="text-lg sm:text-xl font-black text-slate-800 tabular-nums">0,0 kg</div>
+            </div>
+            <div class="bg-white/80 rounded-xl p-2.5 border border-green-100">
+              <div class="text-xs font-bold text-slate-500">Tổng Kg bì</div>
+              <div id="total-tare-weight-display" class="text-lg sm:text-xl font-black text-amber-700 tabular-nums">0,0 kg</div>
+            </div>
+            <div class="bg-white/80 rounded-xl p-2.5 border border-green-100">
+              <div class="text-xs font-bold text-slate-500">Tổng Kg thực</div>
+              <div id="total-weight-display" class="text-lg sm:text-xl font-black text-green-800 tabular-nums">0,0 kg</div>
+            </div>
+            <div class="col-span-2 sm:col-span-1 bg-white/80 rounded-xl p-2.5 border border-green-100">
+              <div class="text-xs font-bold text-slate-500">Tổng tiền hàng</div>
+              <div id="gross-money-display" class="text-lg sm:text-xl font-black text-slate-900 tabular-nums">0 đ</div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-sm sm:text-base font-bold text-slate-700 px-1">
+            <span>Trừ tiền cọc / ứng trước:</span>
+            <span id="deposit-deduct-display" class="text-amber-700 tabular-nums">- 0 đ</span>
+          </div>
+
+          <div class="pt-2 border-t-2 border-dashed border-green-300 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 px-1">
+            <span class="text-base sm:text-lg font-extrabold text-green-950 uppercase">
+              Tiền thực trả nhà vườn:
+            </span>
+            <span id="net-payout-display" class="text-3xl sm:text-4xl font-black text-green-800 tabular-nums">
+              0 đ
+            </span>
+          </div>
+
+          <!-- Đọc số tiền bằng chữ tiếng Việt -->
+          <div class="bg-white/90 rounded-xl px-3 py-2 border border-green-200/80 text-xs sm:text-sm">
+            <span class="font-bold text-slate-500">Bằng chữ: </span>
+            <span id="net-payout-words" class="font-extrabold italic text-green-900">Không đồng</span>
+          </div>
+        </div>
+
+        <!-- 4 Nút Hành Động Chính: Lưu Phiếu Vào Sổ, Copy Gửi Zalo, In Phiếu, Tạo Phiếu Mới -->
+        <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button
+            type="button"
+            onclick="saveCurrentTicketToHistory(false)"
+            class="py-3 px-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
+          >
+            <span>💾 Lưu Phiếu Vào Sổ</span>
+          </button>
+          <button
+            type="button"
+            onclick="copyZaloText()"
+            class="py-3 px-3 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
+          >
+            <span>📋 Copy Gửi Zalo</span>
+          </button>
+          <button
+            type="button"
+            onclick="printDirectReceipt()"
+            class="py-3 px-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-amber-950 font-extrabold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
+          >
+            <span>🖨️ In Phiếu</span>
+          </button>
+          <button
+            type="button"
+            onclick="openNewTicketConfirm()"
+            class="py-3 px-3 rounded-2xl bg-yellow-400 hover:bg-yellow-300 text-green-950 font-extrabold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
+          >
+            <span>🆕 Tạo Phiếu Mới</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: LỊCH SỬ PHIẾU CÂN ==================== -->
+    <section id="tab-history" class="hidden max-w-4xl mx-auto space-y-4">
+      <!-- Thống kê tổng quan lịch sử -->
+      <div class="grid grid-cols-3 gap-2.5 sm:gap-4">
+        <div class="bg-white rounded-2xl p-3 sm:p-4 border border-green-200 shadow-sm">
+          <div class="text-xs font-bold text-slate-500">Tổng số phiếu</div>
+          <div id="hist-stat-count" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 tabular-nums">0</div>
+        </div>
+        <div class="bg-white rounded-2xl p-3 sm:p-4 border border-green-200 shadow-sm">
+          <div class="text-xs font-bold text-slate-500">Tổng sản lượng</div>
+          <div id="hist-stat-weight" class="text-xl sm:text-2xl font-black text-green-800 mt-0.5 tabular-nums">0 kg</div>
+        </div>
+        <div class="bg-white rounded-2xl p-3 sm:p-4 border border-green-200 shadow-sm">
+          <div class="text-xs font-bold text-slate-500">Tổng tiền hàng</div>
+          <div id="hist-stat-money" class="text-lg sm:text-2xl font-black text-amber-700 mt-0.5 tabular-nums truncate">0 đ</div>
+        </div>
+      </div>
+
+      <!-- Ô tìm kiếm phiếu cũ -->
+      <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-green-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h2 class="text-lg font-black text-green-950">Danh Sách Phiếu Đã Lưu</h2>
+          <div class="relative flex-1 sm:max-w-xs">
+            <input
+              id="history-search-input"
+              type="text"
+              placeholder="Tìm tên chủ vườn, SĐT, ghi chú..."
+              oninput="renderHistoryList()"
+              class="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-300 focus:border-green-600 outline-none text-sm font-semibold"
+            />
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+          </div>
+        </div>
+
+        <div id="history-list-container" class="space-y-3">
+          <!-- Render động qua JS -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== CHÂN TRANG (FOOTER) THÔNG TIN TÁC GIẢ ==================== -->
+  <footer class="max-w-6xl w-full mx-auto px-3 sm:px-5 mt-6 mb-4">
+    <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-green-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-2.5 text-center sm:text-left">
+      <div class="space-y-0.5">
+        <div class="text-xs sm:text-sm font-extrabold text-green-950 flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
+          <span>🍈 Sổ Cân Mít — Phát triển bởi</span>
+          <a
+            href="https://linhkienpinthapmuoi.io.vn"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-green-700 hover:text-green-800 underline decoration-green-500/60 underline-offset-2 font-black"
+          >
+            Linh Kiện Pin Tháp Mười
+          </a>
+        </div>
+        <div class="text-xs text-slate-600 font-medium flex flex-wrap items-center justify-center sm:justify-start gap-x-2 gap-y-0.5">
+          <a
+            href="https://linhkienpinthapmuoi.io.vn"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-sky-700 hover:underline font-bold"
+          >
+            🌐 https://linhkienpinthapmuoi.io.vn
+          </a>
+          <span id="footer-author-extra" class="text-slate-600 font-semibold"></span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onclick="openAuthorModal()"
+        class="px-3.5 py-2 rounded-xl bg-green-50 hover:bg-green-100 text-green-900 border border-green-300 font-extrabold text-xs flex items-center gap-1.5 shrink-0 transition active:scale-95"
+      >
+        <span>ℹ️ Thông tin tác giả</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- ==================== THANH TÓM TẮT NHANH DƯỚI ĐÁY (MOBILE) ==================== -->
+  <div id="mobile-bottom-bar" class="md:hidden fixed bottom-0 inset-x-0 z-20 bg-white/95 backdrop-blur border-t-2 border-green-700/20 px-3 py-2 shadow-[0_-4px_15px_rgba(0,0,0,0.08)]">
+    <div class="flex items-center justify-between gap-2">
+      <div class="min-w-0">
+        <div class="text-[11px] font-bold text-slate-500 truncate">
+          <span id="mobile-bar-weight">0 trái • 0,0 kg</span>
+        </div>
+        <div id="mobile-bar-payout" class="text-base font-black text-green-800 truncate tabular-nums">
+          Thực trả: 0 đ
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button
+          type="button"
+          onclick="switchTab('ticket')"
+          class="px-3 py-2 rounded-xl bg-green-700 text-white font-extrabold text-xs shadow active:scale-95"
+        >
+          🧾 Phiếu Tiền
+        </button>
+        <button
+          type="button"
+          onclick="copyZaloText()"
+          class="px-3 py-2 rounded-xl bg-sky-600 text-white font-extrabold text-xs shadow active:scale-95"
+        >
+          📋 Zalo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL XEM PHIẾU CÂN & IN HÓA ĐƠN ==================== -->
+  <div id="receipt-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      <!-- Thanh công cụ Modal (ẩn khi in) -->
+      <div class="no-print px-4 py-3 bg-green-900 text-white flex items-center justify-between gap-2">
+        <h3 class="font-extrabold text-base sm:text-lg flex items-center gap-2">
+          <span>🧾 Phiếu Cân Thu Mua Mít</span>
+        </h3>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            onclick="copyZaloText()"
+            class="px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs sm:text-sm transition"
+          >
+            📋 Copy Zalo
+          </button>
+          <button
+            type="button"
+            onclick="window.print()"
+            class="px-3 py-1.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-green-950 font-extrabold text-xs sm:text-sm transition"
+          >
+            🖨️ In Phiếu
+          </button>
+          <button
+            type="button"
+            onclick="closeReceiptModal()"
+            class="w-8 h-8 rounded-xl bg-green-800 hover:bg-green-700 text-white font-bold flex items-center justify-center"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Nội dung Hóa Đơn có thể In -->
+      <div id="receipt-printable" class="p-4 sm:p-6 overflow-y-auto space-y-4 text-slate-900 bg-white">
+        <!-- Render động nội dung phiếu cân qua JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL XÁC NHẬN TẠO PHIẾU MỚI (THAY CHO confirm()) ==================== -->
+  <div id="new-ticket-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-yellow-100 text-amber-700 flex items-center justify-center text-2xl shrink-0">
+          📒
+        </div>
+        <div>
+          <h3 class="text-lg font-black text-slate-900">Tạo Phiếu Cân Mới?</h3>
+          <p class="text-xs sm:text-sm text-slate-600">
+            Bạn muốn lưu phiếu đang cân vào Lịch sử trước khi bắt đầu cân cho nhà vườn mới chứ?
+          </p>
+        </div>
+      </div>
+
+      <div class="space-y-2 pt-1">
+        <button
+          type="button"
+          onclick="confirmSaveAndReset()"
+          class="w-full py-3 px-4 rounded-2xl bg-green-700 hover:bg-green-800 text-white font-extrabold text-sm shadow transition"
+        >
+          ✅ Lưu Phiếu Này &amp; Tạo Phiếu Mới
+        </button>
+        <button
+          type="button"
+          onclick="confirmDiscardAndReset()"
+          class="w-full py-2.5 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-sm transition"
+        >
+          🗑️ Không Lưu, Xóa Trắng Để Cân Mới
+        </button>
+        <button
+          type="button"
+          onclick="closeNewTicketModal()"
+          class="w-full py-2.5 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition"
+        >
+          Quay lại cân tiếp
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL CHỌN NHANH 16 LOẠI ĐỂ ĐỔI PHÂN LOẠI TRÁI ==================== -->
+  <div id="grade-picker-modal" class="fixed inset-0 z-50 hidden bg-slate-900/65 backdrop-blur-sm flex items-end sm:items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-4 sm:p-5 shadow-2xl border border-slate-200 space-y-3.5">
+      <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-200">
+        <div>
+          <h3 class="text-base sm:text-lg font-black text-slate-900">Đổi Phân Loại Trái Mít</h3>
+          <p id="grade-picker-subtitle" class="text-xs font-bold text-green-800 mt-0.5">
+            Trái #1 • 0,0 kg
+          </p>
+        </div>
+        <button
+          type="button"
+          onclick="closeGradePickerModal()"
+          class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold flex items-center justify-center"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div id="grade-picker-grid" class="grid grid-cols-4 gap-1.5 max-h-[60vh] overflow-y-auto py-0.5">
+        <!-- Render động 16 nút phân loại qua JS -->
+      </div>
+
+      <div class="pt-1 flex items-center gap-2">
+        <button
+          type="button"
+          onclick="deleteFruitFromPicker()"
+          class="px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs sm:text-sm transition"
+        >
+          🗑️ Xóa trái này
+        </button>
+        <button
+          type="button"
+          onclick="closeGradePickerModal()"
+          class="flex-1 py-2.5 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition"
+        >
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL THÔNG TIN TÁC GIẢ (LINH KIỆN PIN THÁP MƯỜI) ==================== -->
+  <div id="author-modal" class="fixed inset-0 z-50 hidden bg-slate-900/65 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border border-green-200 space-y-4">
+      <!-- Tiêu đề Modal -->
+      <div class="flex items-start justify-between gap-2 pb-3 border-b border-slate-200">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-800 to-emerald-700 text-yellow-300 flex items-center justify-center text-2xl font-black shadow-sm shrink-0 border border-green-600">
+            ⚡
+          </div>
+          <div>
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
+              Thông Tin Tác Giả
+            </span>
+            <h3 class="text-lg font-black text-slate-900 mt-1">
+              Linh Kiện Pin Tháp Mười
+            </h3>
+          </div>
+        </div>
+        <button
+          type="button"
+          onclick="closeAuthorModal()"
+          class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold flex items-center justify-center shrink-0"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Liên kết Website chính thức -->
+      <div class="bg-green-50/90 rounded-2xl p-3.5 border border-green-200 space-y-2">
+        <div class="text-xs font-bold text-green-900">Website chính thức:</div>
+        <div class="flex items-center justify-between gap-2">
+          <a
+            href="https://linhkienpinthapmuoi.io.vn"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-sm font-black text-sky-700 hover:text-sky-800 underline break-all"
+          >
+            https://linhkienpinthapmuoi.io.vn
+          </a>
+          <a
+            href="https://linhkienpinthapmuoi.io.vn"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="px-3 py-1.5 rounded-xl bg-green-700 hover:bg-green-800 text-white font-extrabold text-xs shrink-0 transition"
+          >
+            Mở Web ↗
+          </a>
+        </div>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Ứng dụng <strong>Sổ Cân Mít</strong> được thiết kế tối ưu cho thương lái, vựa thu mua và nhà vườn thao tác nhanh, chính xác ngoài vườn.
+        </p>
+      </div>
+
+      <!-- Tùy chọn nhập thêm SĐT/Zalo & Địa chỉ cơ sở (lưu localStorage) -->
+      <div class="space-y-3">
+        <div class="text-xs font-extrabold uppercase tracking-wider text-slate-600">
+          Tùy chọn hiển thị thêm trên phiếu in &amp; Zalo:
+        </div>
+
+        <div>
+          <label for="author-phone-input" class="block text-xs font-bold text-slate-700 mb-1">
+            Số điện thoại / Zalo (không bắt buộc)
+          </label>
+          <input
+            id="author-phone-input"
+            type="tel"
+            placeholder="Nhập SĐT / Zalo của bạn nếu muốn in lên phiếu..."
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600/20 outline-none font-semibold text-sm text-slate-900"
+          />
+        </div>
+
+        <div>
+          <label for="author-address-input" class="block text-xs font-bold text-slate-700 mb-1">
+            Địa chỉ cơ sở / Vựa (không bắt buộc)
+          </label>
+          <input
+            id="author-address-input"
+            type="text"
+            placeholder="Nhập địa chỉ cơ sở nếu muốn hiển thị..."
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600/20 outline-none font-semibold text-sm text-slate-900"
+          />
+        </div>
+      </div>
+
+      <!-- Nút lưu & đóng -->
+      <div class="pt-1 flex items-center gap-2">
+        <button
+          type="button"
+          onclick="clearAuthorOptionalFields()"
+          class="px-3.5 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition"
+        >
+          Xóa trống
+        </button>
+        <button
+          type="button"
+          onclick="saveAuthorInfo()"
+          class="flex-1 py-2.5 px-4 rounded-2xl bg-green-700 hover:bg-green-800 text-white font-extrabold text-xs sm:text-sm shadow transition"
+        >
+          💾 Lưu Thông Tin
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== THÔNG BÁO TOAST NỔI ==================== -->
+  <div
+    id="toast-notification"
+    class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-200 transform -translate-y-2"
+  >
+    <div id="toast-inner" class="px-4 py-2.5 rounded-2xl bg-slate-900 text-white font-bold text-sm shadow-xl border border-slate-700 flex items-center gap-2 whitespace-nowrap">
+      <span id="toast-icon">✅</span>
+      <span id="toast-message">Thông báo</span>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT XỬ LÝ TOÀN BỘ ỨNG DỤNG ==================== -->
+  <script>
+    /*************************************************************************
+     * 1. CẤU HÌNH MẶC ĐỊNH 16 PHÂN LOẠI MÍT & TRẠNG THÁI ỨNG DỤNG (STATE)
+     *************************************************************************/
+    const STORAGE_KEYS = {
+      PRICES: 'so_can_mit_grades_v3',
+      TARE: 'socanmit_tare_v3',
+      CURRENT_TICKET: 'socanmit_current_v3',
+      HISTORY: 'socanmit_history_v3',
+      SOUND: 'socanmit_sound_v1',
+      AUTHOR: 'so_can_mit_author_v1'
+    };
+
+    const AUTHOR_BRAND = {
+      name: 'Linh Kiện Pin Tháp Mười',
+      website: 'https://linhkienpinthapmuoi.io.vn'
+    };
+
+    const DEFAULT_CATEGORIES = [
+// ... existing code ... -->
+      pickerTargetItemId: null,
+      clearConfirmPending: false,
+      deleteHistoryPendingId: null,
+      author: {
+        phone: '',
+        address: ''
+      },
+      currentTicket: createEmptyTicket(),
+      history: []
+    };
+
+    function createEmptyTicket() {
+// ... existing code ... -->
+    function formatShortPrice(price) {
+      const val = Math.round(Number(price) || 0);
+      if (val >= 1000) {
+        const k = Math.round((val / 1000) * 10) / 10;
+        return k.toLocaleString('vi-VN') + 'k';
+      }
+      return val.toLocaleString('vi-VN') + 'đ';
+    }
+
+    function formatWeight(kg) {
+// ... existing code ... -->
+        const savedSound = localStorage.getItem(STORAGE_KEYS.SOUND);
+        if (savedSound !== null) {
+          state.soundEnabled = JSON.parse(savedSound);
+        }
+
+        const savedAuthor = localStorage.getItem(STORAGE_KEYS.AUTHOR);
+        if (savedAuthor) {
+          const parsedAuthor = JSON.parse(savedAuthor);
+          state.author = {
+            phone: typeof parsedAuthor.phone === 'string' ? parsedAuthor.phone : '',
+            address: typeof parsedAuthor.address === 'string' ? parsedAuthor.address : ''
+          };
+        }
+
+        const savedCurrent = localStorage.getItem(STORAGE_KEYS.CURRENT_TICKET);
+// ... existing code ... -->
+    function saveHistoryToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(state.history));
+      } catch (e) {}
+    }
+
+    function saveAuthorToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.AUTHOR, JSON.stringify(state.author));
+      } catch (e) {}
+    }
+
+    function openAuthorModal() {
+      document.getElementById('author-phone-input').value = state.author.phone || '';
+      document.getElementById('author-address-input').value = state.author.address || '';
+      document.getElementById('author-modal').classList.remove('hidden');
+    }
+
+    function closeAuthorModal() {
+      document.getElementById('author-modal').classList.add('hidden');
+    }
+
+    function saveAuthorInfo() {
+      state.author.phone = document.getElementById('author-phone-input').value.trim();
+      state.author.address = document.getElementById('author-address-input').value.trim();
+      saveAuthorToStorage();
+      renderAuthorInfoUI();
+      closeAuthorModal();
+      playBeep('record', 880);
+      showToast('Đã lưu thông tin tác giả / cơ sở!', '✅');
+    }
+
+    function clearAuthorOptionalFields() {
+      document.getElementById('author-phone-input').value = '';
+      document.getElementById('author-address-input').value = '';
+      state.author.phone = '';
+      state.author.address = '';
+      saveAuthorToStorage();
+      renderAuthorInfoUI();
+      playBeep('tap');
+      showToast('Đã xóa trống SĐT & Địa chỉ tùy chọn', '🗑️');
+    }
+
+    function renderAuthorInfoUI() {
+      const extraEl = document.getElementById('footer-author-extra');
+      if (!extraEl) return;
+      const parts = [];
+      if (state.author.phone && state.author.phone.trim()) {
+        parts.push(`• SĐT/Zalo: ${state.author.phone.trim()}`);
+      }
+      if (state.author.address && state.author.address.trim()) {
+        parts.push(`• Đ/c: ${state.author.address.trim()}`);
+      }
+      extraEl.textContent = parts.join(' ');
+    }
+
+    /*************************************************************************
+     * 5. LOGIC BÀN PHÍM CÂN NHANH (FAST WEIGHING KEYPAD)
+// ... existing code ... -->
+          <!-- Chữ ký hai bên -->
+          <div class="grid grid-cols-2 gap-4 pt-4 text-center text-xs sm:text-sm">
+            <div>
+              <div class="font-extrabold uppercase">Người Cân / Thương Lái</div>
+              <div class="text-slate-400 italic text-xs mt-0.5">(Ký, ghi rõ họ tên)</div>
+              <div class="h-14"></div>
+            </div>
+            <div>
+              <div class="font-extrabold uppercase">Chủ Vườn / Người Bán</div>
+              <div class="text-slate-400 italic text-xs mt-0.5">(Ký xác nhận)</div>
+              <div class="h-14"></div>
+            </div>
+          </div>
+
+          <!-- Chân phiếu in thông tin tác giả -->
+          <div class="pt-3 border-t border-dashed border-slate-400 text-center text-[11px] sm:text-xs text-slate-700 space-y-0.5">
+            <div class="font-extrabold text-slate-900">
+              📲 Sổ Cân Mít - ${escapeHTML(AUTHOR_BRAND.name)}
+            </div>
+            <div class="font-semibold">
+              🌐 ${escapeHTML(AUTHOR_BRAND.website)}
+            </div>
+            ${state.author.phone && state.author.phone.trim() ? `<div class="font-semibold">☎️ SĐT / Zalo: ${escapeHTML(state.author.phone.trim())}</div>` : ''}
+            ${state.author.address && state.author.address.trim() ? `<div class="font-semibold">📍 Địa chỉ: ${escapeHTML(state.author.address.trim())}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    let activeReceiptTicket = null;
+// ... existing code ... -->
+      lines.push(`💵 THỰC TRẢ: ${formatMoney(totals.netPayout)}`);
+      lines.push(`✍️ Bằng chữ: ${docTienBangChu(totals.netPayout)}`);
+      lines.push(`------------------------`);
+      lines.push(`📲 Sổ Cân Mít - ${AUTHOR_BRAND.name}`);
+      lines.push(`🌐 ${AUTHOR_BRAND.website}`);
+      if (state.author.phone && state.author.phone.trim()) {
+        lines.push(`☎️ SĐT/Zalo: ${state.author.phone.trim()}`);
+      }
+      if (state.author.address && state.author.address.trim()) {
+        lines.push(`📍 Địa chỉ: ${state.author.address.trim()}`);
+      }
+
+      return lines.join('\n');
+    }
+
+    function copyZaloText(ticket = null, categoriesList = null) {
+// ... existing code ... -->
+    function copyHistoryZalo(historyId) {
+      const record = state.history.find(h => h.id === historyId);
+      if (!record) return;
+      const cats = (Array.isArray(record.categoriesSnapshot) && record.categoriesSnapshot.length >= 16)
+        ? record.categoriesSnapshot
+        : state.categories;
+      copyZaloText(record, cats);
+    }
+
+    function printHistoryReceipt(historyId) {
+      const record = state.history.find(h => h.id === historyId);
+      if (!record) return;
+      const cats = (Array.isArray(record.categoriesSnapshot) && record.categoriesSnapshot.length >= 16)
+        ? record.categoriesSnapshot
+        : state.categories;
+      const container = document.getElementById('receipt-printable');
+      container.innerHTML = buildReceiptHTML(record, cats);
+      window.print();
+    }
+
+    function deleteHistoryTicket(historyId) {
+// ... existing code ... -->
+      // Cập nhật các thẻ tổng cộng
+      document.getElementById('total-fruits-display').textContent = `${totals.totalFruits} trái`;
+      document.getElementById('total-gross-weight-display').textContent = `${formatWeight(totals.totalGrossKg)} kg`;
+      document.getElementById('total-tare-weight-display').textContent = `${formatWeight(totals.totalTareKg)} kg`;
+      document.getElementById('total-weight-display').textContent = `${formatWeight(totals.totalKg)} kg`;
+      document.getElementById('gross-money-display').textContent = formatMoney(totals.grossMoney);
+      document.getElementById('deposit-deduct-display').textContent = `- ${formatMoney(totals.deposit)}`;
+      document.getElementById('net-payout-display').textContent = formatMoney(totals.netPayout);
+      document.getElementById('net-payout-words').textContent = docTienBangChu(totals.netPayout);
+// ... existing code ... -->
+            <div class="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                onclick="viewHistoryReceipt('${h.id}')"
+                class="px-3 py-1.5 rounded-xl bg-green-700 hover:bg-green-800 text-white font-bold text-xs transition"
+              >
+                🧾 Xem Phiếu
+              </button>
+              <button
+                type="button"
+                onclick="copyHistoryZalo('${h.id}')"
+                class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs transition"
+              >
+                📋 Copy Zalo
+              </button>
+              <button
+                type="button"
+                onclick="printHistoryReceipt('${h.id}')"
+                class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold text-xs transition"
+              >
+                🖨️ In Lại
+              </button>
+              <button
+                type="button"
+                onclick="loadHistoryTicketForEdit('${h.id}')"
+                class="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 font-bold text-xs transition"
+              >
+                ✏️ Tải Lên Bàn Cân
+              </button>
+              <button
+                type="button"
+                onclick="deleteHistoryTicket('${h.id}')"
+                class="px-3 py-1.5 rounded-xl font-bold text-xs transition ${
+                  isDeletePending
+                    ? 'bg-rose-600 text-white'
+                    : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                }"
+              >
+                ${isDeletePending ? '⚠️ Bấm xác nhận xóa' : '🗑️ Xóa'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAll() {
+      updateSoundUI();
+      renderAuthorInfoUI();
+      renderQuickPriceStrip();
+      updateWeightDisplay();
+      renderGradeActionButtons();
+      renderUndoAndLastWeighed();
+      renderFarmerInputs();
+      renderSummarySection();
+      renderWeighedItemsList();
+      renderPriceSettingsTab();
+      updateHistoryBadge();
+    }
+
+    /*************************************************************************
+     * 12. THÔNG BÁO TOAST & BÀN PHÍM VẬT LÝ
+// ... existing code ... -->
+      if (!document.getElementById('grade-picker-modal').classList.contains('hidden')) {
+        if (e.key === 'Escape') closeGradePickerModal();
+        return;
+      }
+      if (!document.getElementById('author-modal').classList.contains('hidden')) {
+        if (e.key === 'Escape') closeAuthorModal();
+        return;
+      }
+
+      // Chỉ kích hoạt bàn phím cân khi đang ở tab Cân
+// ... existing code ... -->
